@@ -7,10 +7,10 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+@ToString(exclude = {"accounts","resources"})
 @EqualsAndHashCode(of = "id")
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED) @AllArgsConstructor
 @Getter
 @Entity
 public class Role implements Serializable {

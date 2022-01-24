@@ -8,10 +8,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 
+@ToString(exclude = {"accountRoles"})
 @EqualsAndHashCode(of = "id")
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED) @AllArgsConstructor
 @Getter
 @Entity
 public class Account implements Serializable {
@@ -26,10 +26,18 @@ public class Account implements Serializable {
     @Column
     private String password;
     @Column
-    private Long age;
+    private int age;
 
     @ManyToMany(cascade = {CascadeType.ALL})
     @JoinTable(name = "account_roles",
             joinColumns = {@JoinColumn(name = "account_id")}, inverseJoinColumns = {@JoinColumn(name = "role_id")})
     private Set<Role> accountRoles = new HashSet<>();
+
+    public void setAccountRoles(Set<Role> accountRoles) {
+        this.accountRoles = accountRoles;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
