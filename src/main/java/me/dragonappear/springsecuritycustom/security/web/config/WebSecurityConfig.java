@@ -2,8 +2,11 @@ package me.dragonappear.springsecuritycustom.security.web.config;
 
 import lombok.RequiredArgsConstructor;
 import me.dragonappear.springsecuritycustom.security.web.handler.FormAccessDeniedHandler;
+import me.dragonappear.springsecuritycustom.security.web.handler.FormAuthenticationFailureHandler;
+import me.dragonappear.springsecuritycustom.security.web.handler.FormAuthenticationSuccessHandler;
 import me.dragonappear.springsecuritycustom.security.web.provider.FormAuthenticationProvider;
 import me.dragonappear.springsecuritycustom.security.web.oauth2.OAuth2AccountService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -24,11 +27,11 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 @Order(1)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final AuthenticationDetailsSource formAuthenticationDetailsSource;
-    private final AuthenticationSuccessHandler formAuthenticationSuccessHandler;
-    private final AuthenticationFailureHandler formAuthenticationFailureHandler;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
     private final OAuth2AccountService oAuth2AccountService;
+    private final AuthenticationSuccessHandler formAuthenticationSuccessHandler;
+    private final AuthenticationFailureHandler formAuthenticationFailureHandler;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -39,7 +42,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/", "/login**","/users").permitAll()
+                .antMatchers("/", "/login**", "/users").permitAll()
                 .antMatchers("/mypage").hasRole("USER")
                 .antMatchers("/messages").hasRole("MANAGER")
                 .anyRequest().authenticated()
@@ -54,12 +57,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .loginProcessingUrl("/login_proc")
                 .successHandler(formAuthenticationSuccessHandler)
                 .failureHandler(formAuthenticationFailureHandler)
-                .authenticationDetailsSource(formAuthenticationDetailsSource)
-                .defaultSuccessUrl("/");
+                .authenticationDetailsSource(formAuthenticationDetailsSource);
 
         http
                 .oauth2Login()
                 .loginPage("/login")
+                .successHandler(formAuthenticationSuccessHandler)
+                .failureHandler(formAuthenticationFailureHandler)
                 .userInfoEndpoint()
                 .userService(oAuth2AccountService);
     }
