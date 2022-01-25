@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 
 @RequiredArgsConstructor
 @Configuration
-@Order(0)
+@Order(1)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final AuthenticationDetailsSource formAuthenticationDetailsSource;
     private final AuthenticationSuccessHandler formAuthenticationSuccessHandler;
