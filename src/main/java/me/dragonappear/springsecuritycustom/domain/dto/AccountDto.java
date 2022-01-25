@@ -21,7 +21,6 @@ public class AccountDto {
 
     public Account toEntity() {
         return Account.builder()
-                .id(Long.valueOf(this.getId()))
                 .username(this.getUsername())
                 .email(this.getEmail())
                 .age(this.getAge())

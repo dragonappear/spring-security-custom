@@ -28,7 +28,7 @@ public class Account implements Serializable {
     @Column
     private int age;
 
-    @ManyToMany(cascade = {CascadeType.ALL})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     @JoinTable(name = "account_roles",
             joinColumns = {@JoinColumn(name = "account_id")}, inverseJoinColumns = {@JoinColumn(name = "role_id")})
     private Set<Role> accountRoles = new HashSet<>();
