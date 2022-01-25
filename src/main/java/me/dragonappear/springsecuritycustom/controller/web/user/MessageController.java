@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class MessageController {
-    @GetMapping("/messages")
+    @GetMapping(value = {"/messages","/api/messages"})
     public String messages() {
         return "user/messages";
     }

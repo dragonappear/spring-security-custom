@@ -47,17 +47,25 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
                 .accessDeniedHandler(jsonAccessDeniedHandler())
                 .authenticationEntryPoint(jsonAuthenticationEntryPoint());
 
-
             http
                 .antMatcher("/api/**")
                 .authorizeRequests()
-                    .antMatchers("/api/login").permitAll()
-                .anyRequest().authenticated()
+                .antMatchers("/api/login").permitAll()
+                .antMatchers("/api/messages").hasRole("MANAGER")
+                .anyRequest().authenticated();
 
-                .and()
-                .addFilterBefore(jsonAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+            customConfigurerJson(http);
 
-        http.csrf().disable();
+            http.csrf().disable();
+    }
+
+    public void customConfigurerJson(HttpSecurity http) throws Exception {
+        http
+                .apply(new JsonLoginConfigurer<>())
+                .successHandlerJson(jsonAuthenticationSuccessHandler())
+                .failureHandlerJson(jsonAuthenticationFailureHandler())
+                .setAuthenticationManager(authenticationManagerBean())
+                .loginProcessingUrl("/api/login");
     }
 
     @Override

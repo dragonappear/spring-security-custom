@@ -1,5 +1,6 @@
 package me.dragonappear.springsecuritycustom.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -23,8 +24,11 @@ public class Role implements Serializable {
     @Column
     private String roleDesc;
 
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY,mappedBy = "accountRoles")
     private Set<Account> accounts = new HashSet<>();
+
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY,mappedBy = "roleSet")
     private Set<Resource> resources = new HashSet<>();
 }
