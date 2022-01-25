@@ -26,7 +26,7 @@ public class LoginController {
         return "login";
     }
 
-    @GetMapping(value = "/logout")
+    @GetMapping(value = {"/logout","api/logout"})
     public String logout(HttpServletRequest request, HttpServletResponse response) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null) {
