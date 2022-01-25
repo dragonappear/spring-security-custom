@@ -3,6 +3,7 @@ package me.dragonappear.springsecuritycustom.security.web.config;
 import lombok.RequiredArgsConstructor;
 import me.dragonappear.springsecuritycustom.security.web.handler.FormAccessDeniedHandler;
 import me.dragonappear.springsecuritycustom.security.web.provider.FormAuthenticationProvider;
+import me.dragonappear.springsecuritycustom.security.web.oauth2.OAuth2AccountService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -26,6 +27,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final AuthenticationFailureHandler formAuthenticationFailureHandler;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
+    private final OAuth2AccountService oAuth2AccountService;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -36,11 +38,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/", "/login**").permitAll()
+                .antMatchers("/", "/login**","/users").permitAll()
                 .antMatchers("/mypage").hasRole("USER")
                 .antMatchers("/messages").hasRole("MANAGER")
                 .anyRequest().authenticated()
-
                 .and()
                 .exceptionHandling()
                 .accessDeniedPage("/denied")
@@ -55,6 +56,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationDetailsSource(formAuthenticationDetailsSource)
                 .defaultSuccessUrl("/");
 
+        http
+                .oauth2Login()
+                .loginPage("/login")
+                .userInfoEndpoint()
+                .userService(oAuth2AccountService);
     }
 
     @Bean

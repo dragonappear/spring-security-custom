@@ -26,7 +26,10 @@ public class Account implements Serializable {
     @Column
     private String password;
     @Column
-    private int age;
+    private String provider;
+    @Column
+    private String providerId;
+
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     @JoinTable(name = "account_roles",
@@ -39,5 +42,9 @@ public class Account implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

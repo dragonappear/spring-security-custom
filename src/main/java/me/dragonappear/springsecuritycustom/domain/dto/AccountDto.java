@@ -15,7 +15,6 @@ public class AccountDto {
     private String id;
     private String username;
     private String email;
-    private int age;
     private String password;
     private List<String> accountRoles;
 
@@ -23,7 +22,6 @@ public class AccountDto {
         return Account.builder()
                 .username(this.getUsername())
                 .email(this.getEmail())
-                .age(this.getAge())
                 .password(this.getPassword())
                 .build();
     }

@@ -1,6 +1,6 @@
 package me.dragonappear.springsecuritycustom.controller.web.user;
 
-import me.dragonappear.springsecuritycustom.domain.entity.Account;
+import me.dragonappear.springsecuritycustom.security.web.service.AccountContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -16,8 +16,8 @@ public class DeniedController {
                          Model model,
                          Authentication authentication) {
 
-        Account principal = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        model.addAttribute("username", principal.getUsername());
+        AccountContext principal = (AccountContext) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        model.addAttribute("username", principal.getAccount().getUsername());
         model.addAttribute("exception", exception);
         return "user/login/denied";
     }

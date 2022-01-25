@@ -32,7 +32,7 @@ public class FormAuthenticationProvider implements AuthenticationProvider {
         }
 
 
-        return new UsernamePasswordAuthenticationToken(accountContext.getAccount(), null, accountContext.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(accountContext, null, accountContext.getAuthorities());
     }
 
     @Override
