@@ -5,7 +5,6 @@ import me.dragonappear.springsecuritycustom.domain.entity.Account;
 import me.dragonappear.springsecuritycustom.domain.entity.Role;
 import me.dragonappear.springsecuritycustom.repository.AccountRepository;
 import me.dragonappear.springsecuritycustom.repository.RoleRepository;
-import me.dragonappear.springsecuritycustom.security.web.oauth2.principal.OAuth2Principal;
 import me.dragonappear.springsecuritycustom.security.web.oauth2.provider.GoogleUserInfo;
 import me.dragonappear.springsecuritycustom.security.web.oauth2.provider.OAuth2UserInfo;
 import me.dragonappear.springsecuritycustom.security.web.service.AccountContext;
@@ -70,6 +69,6 @@ public class OAuth2AccountService extends DefaultOAuth2UserService {
                 .stream().map(role -> role.getRoleName()).collect(Collectors.toSet())
                 .stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 
-        return new OAuth2Principal(account, authorities, oAuth2User.getAttributes());
+        return new AccountContext(account, authorities, oAuth2User.getAttributes());
     }
 }

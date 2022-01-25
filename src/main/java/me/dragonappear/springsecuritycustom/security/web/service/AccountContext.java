@@ -10,11 +10,23 @@ import java.util.Collection;
 import java.util.Map;
 
 @Data
-public class AccountContext extends User  {
+public class AccountContext extends User implements OAuth2User {
     private Account account;
+    private Map<String, Object> attributes;
 
     public AccountContext(Account account, Collection<? extends GrantedAuthority> authorities) {
         super(account.getUsername(), account.getPassword(), authorities);
         this.account = account;
+    }
+
+    public AccountContext(Account account, Collection<? extends GrantedAuthority> authorities,Map<String, Object> attributes) {
+        super(account.getUsername(), account.getPassword(), authorities);
+        this.account = account;
+        this.attributes = attributes;
+    }
+
+    @Override
+    public String getName() {
+        return this.account.getId()+"";
     }
 }
