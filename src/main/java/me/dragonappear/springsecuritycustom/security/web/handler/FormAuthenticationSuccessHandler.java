@@ -28,7 +28,15 @@ public class FormAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuc
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         setDefaultTargetUrl("/");
-        requestCache.removeRequest(request, response);
-        redirectStrategy.sendRedirect(request, response, getDefaultTargetUrl());
+
+        SavedRequest savedRequest = requestCache.getRequest(request, response);
+
+
+        if(savedRequest!=null) {
+            String targetUrl = savedRequest.getRedirectUrl();
+            redirectStrategy.sendRedirect(request, response, targetUrl);
+        } else {
+            redirectStrategy.sendRedirect(request, response, getDefaultTargetUrl());
+        };
     }
 }
