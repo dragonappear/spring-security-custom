@@ -2,6 +2,7 @@ package me.dragonappear.springsecuritycustom.security.api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import me.dragonappear.springsecuritycustom.security.api.filter.CustomCorsFilter;
 import me.dragonappear.springsecuritycustom.security.api.filter.JsonAuthenticationFilter;
 import me.dragonappear.springsecuritycustom.security.api.handler.JsonAccessDeniedHandler;
 import me.dragonappear.springsecuritycustom.security.api.handler.JsonAuthenticationEntryPoint;
@@ -25,6 +26,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -48,6 +51,10 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
             http.formLogin().disable();
             http.oauth2Client().disable();
+            http.csrf().disable();
+
+            http.addFilter(customCorsFilter());
+
 
             http
                 .exceptionHandling()
@@ -63,7 +70,6 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
 
             customConfigurerJson(http);
 
-            http.csrf().disable();
     }
 
     public void customConfigurerJson(HttpSecurity http) throws Exception {
@@ -112,5 +118,10 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public AuthenticationEntryPoint jsonAuthenticationEntryPoint() {
         return new JsonAuthenticationEntryPoint(objectMapper);
+    }
+
+    @Bean
+    public CorsFilter customCorsFilter() {
+        return new CustomCorsFilter(new UrlBasedCorsConfigurationSource());
     }
 }
