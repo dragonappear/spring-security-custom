@@ -32,7 +32,7 @@ public class OAuthJsonAuthenticationFilter extends AbstractAuthenticationProcess
         }
         AccountDto accountDto = objectMapper.readValue(request.getReader(), AccountDto.class);
         if (StringUtils.isEmpty(accountDto.getEmail())) {
-            throw new IllegalArgumentException("Username is Empty");
+            throw new IllegalArgumentException("Email is Empty");
         }
 
         OAuthJsonAuthenticationToken oAuthJsonAuthenticationToken = new OAuthJsonAuthenticationToken(accountDto.getEmail(), accountDto.getPassword());
