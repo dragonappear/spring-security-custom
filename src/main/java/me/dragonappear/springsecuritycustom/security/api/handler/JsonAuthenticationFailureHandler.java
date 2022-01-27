@@ -1,6 +1,8 @@
 package me.dragonappear.springsecuritycustom.security.api.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.dragonappear.springsecuritycustom.security.exception.JwtInvalidException;
+import me.dragonappear.springsecuritycustom.security.exception.JwtNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,12 +28,17 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
             errorMessage = "Locked";
         } else if(exception instanceof CredentialsExpiredException) {
             errorMessage = "Expired password";
+        } else if (exception instanceof JwtInvalidException) {
+            errorMessage = exception.getMessage();
+        }else if (exception instanceof JwtNotFoundException) {
+            errorMessage = exception.getMessage();
         }
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         HashMap<String,String> map = new HashMap<>();
         map.put("message", errorMessage);
+        map.put("code", HttpStatus.UNAUTHORIZED.toString());
         objectMapper.writeValue(response.getWriter(),map);
     }
 }

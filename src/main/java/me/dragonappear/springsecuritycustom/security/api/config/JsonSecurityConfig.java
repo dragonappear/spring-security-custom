@@ -4,11 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import me.dragonappear.springsecuritycustom.security.api.filter.CustomCorsFilter;
 import me.dragonappear.springsecuritycustom.security.api.filter.JsonAuthenticationFilter;
+import me.dragonappear.springsecuritycustom.security.api.filter.JwtValidationFilter;
+import me.dragonappear.springsecuritycustom.security.api.filter.OAuthJsonAuthenticationFilter;
 import me.dragonappear.springsecuritycustom.security.api.handler.JsonAccessDeniedHandler;
 import me.dragonappear.springsecuritycustom.security.api.handler.JsonAuthenticationEntryPoint;
 import me.dragonappear.springsecuritycustom.security.api.handler.JsonAuthenticationFailureHandler;
 import me.dragonappear.springsecuritycustom.security.api.handler.JsonAuthenticationSuccessHandler;
 import me.dragonappear.springsecuritycustom.security.api.provider.JsonAuthenticationProvider;
+import me.dragonappear.springsecuritycustom.security.api.provider.OAuthJsonAuthenticationProvider;
+import me.dragonappear.springsecuritycustom.security.api.provider.TokenProvider;
+import me.dragonappear.springsecuritycustom.security.api.service.JsonUserDetailsService;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,12 +25,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
@@ -35,11 +42,14 @@ import org.springframework.web.filter.CorsFilter;
 @Order(0)
 public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
+    private final JsonUserDetailsService jsonUserDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
+    private final TokenProvider tokenProvider;
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(jsonAuthenticationProvider());
+        auth.authenticationProvider(oAuthJsonAuthenticationProvider());
     }
 
     @Override
@@ -52,9 +62,14 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
             http.formLogin().disable();
             http.oauth2Client().disable();
             http.csrf().disable();
+            http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            http.rememberMe().disable();
+            http.httpBasic().disable();
 
-            http.addFilter(customCorsFilter());
-
+        http.
+                addFilter(customCorsFilter()).
+                addFilterBefore(oAuthJsonAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class).
+                addFilterAfter(jwtValidationFilter(), UsernamePasswordAuthenticationFilter.class);
 
             http
                 .exceptionHandling()
@@ -102,7 +117,7 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public AuthenticationSuccessHandler jsonAuthenticationSuccessHandler() {
-        return new JsonAuthenticationSuccessHandler();
+        return new JsonAuthenticationSuccessHandler(tokenProvider);
     }
 
     @Bean
@@ -123,5 +138,25 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public CorsFilter customCorsFilter() {
         return new CustomCorsFilter(new UrlBasedCorsConfigurationSource());
+    }
+
+    @Bean
+    public OAuthJsonAuthenticationFilter oAuthJsonAuthenticationFilter() throws Exception {
+        OAuthJsonAuthenticationFilter oAuthJsonAuthenticationFilter = new OAuthJsonAuthenticationFilter();
+        oAuthJsonAuthenticationFilter.setAuthenticationManager(authenticationManagerBean());
+        oAuthJsonAuthenticationFilter.setAuthenticationSuccessHandler(jsonAuthenticationSuccessHandler());
+        oAuthJsonAuthenticationFilter.setAuthenticationFailureHandler(jsonAuthenticationFailureHandler());
+        return oAuthJsonAuthenticationFilter;
+    }
+
+    @Bean
+    public OAuthJsonAuthenticationProvider oAuthJsonAuthenticationProvider() {
+        return new OAuthJsonAuthenticationProvider(jsonUserDetailsService);
+    }
+
+    @Bean
+    public JwtValidationFilter jwtValidationFilter() {
+        return new JwtValidationFilter(tokenProvider,jsonUserDetailsService
+                , (JsonAuthenticationFailureHandler) jsonAuthenticationFailureHandler());
     }
 }
