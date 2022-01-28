@@ -7,6 +7,7 @@ import me.dragonappear.springsecuritycustom.security.web.handler.FormAccessDenie
 import me.dragonappear.springsecuritycustom.security.web.metadatasource.UrlFilterInvocationSecurityMetadataSource;
 import me.dragonappear.springsecuritycustom.security.web.oauth2.OAuth2AccountService;
 import me.dragonappear.springsecuritycustom.security.web.provider.FormAuthenticationProvider;
+import me.dragonappear.springsecuritycustom.security.web.voter.IpAddressVoter;
 import me.dragonappear.springsecuritycustom.service.SecurityResourceService;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -104,9 +105,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     public List<AccessDecisionVoter<?>> getAccessDecisionVoters() {
         List<AccessDecisionVoter<? extends Object>> accessDecisionVoters = new ArrayList<>();
+        accessDecisionVoters.add(ipAddressVoter());
         accessDecisionVoters.add(roleVoter());
         return accessDecisionVoters;
     }
+
+    @Bean
+    public AccessDecisionVoter<? extends Object> ipAddressVoter() {
+        return new IpAddressVoter(securityResourceService);
+    }
+
     @Bean
     public AccessDecisionVoter<? extends Object> roleVoter() {
         return new RoleHierarchyVoter(roleHierarchy());

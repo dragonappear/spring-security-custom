@@ -2,6 +2,7 @@ package me.dragonappear.springsecuritycustom.service;
 
 import lombok.RequiredArgsConstructor;
 import me.dragonappear.springsecuritycustom.domain.entity.Resource;
+import me.dragonappear.springsecuritycustom.repository.AccessIpRepository;
 import me.dragonappear.springsecuritycustom.repository.ResourceRepository;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
@@ -13,12 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Transactional
 @RequiredArgsConstructor
 @Service
 public class SecurityResourceService {
     private final ResourceRepository resourceRepository;
+    private final AccessIpRepository accessIpRepository;
 
     public LinkedHashMap<RequestMatcher, List<ConfigAttribute>> getResourceList() {
         LinkedHashMap<RequestMatcher, List<ConfigAttribute>> result = new LinkedHashMap<>();
@@ -31,5 +34,10 @@ public class SecurityResourceService {
             result.put(new AntPathRequestMatcher(resource.getResourceName()), configAttributeList);
         });
         return result;
+    }
+
+    public List<String> getAccessIpList() {
+        return accessIpRepository.findAll().stream().map(accessIp -> accessIp.getIpAddress())
+                .collect(Collectors.toList());
     }
 }

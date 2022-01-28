@@ -1,14 +1,8 @@
 package me.dragonappear.springsecuritycustom.security.listener;
 
 import lombok.RequiredArgsConstructor;
-import me.dragonappear.springsecuritycustom.domain.entity.Account;
-import me.dragonappear.springsecuritycustom.domain.entity.Resource;
-import me.dragonappear.springsecuritycustom.domain.entity.Role;
-import me.dragonappear.springsecuritycustom.domain.entity.RoleHierarchy;
-import me.dragonappear.springsecuritycustom.repository.AccountRepository;
-import me.dragonappear.springsecuritycustom.repository.ResourceRepository;
-import me.dragonappear.springsecuritycustom.repository.RoleHierarchyRepository;
-import me.dragonappear.springsecuritycustom.repository.RoleRepository;
+import me.dragonappear.springsecuritycustom.domain.entity.*;
+import me.dragonappear.springsecuritycustom.repository.*;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,18 +22,21 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     private final AccountRepository accountRepository;
     private final ResourceRepository resourceRepository;
     private final RoleHierarchyRepository roleHierarchyRepository;
+    private final AccessIpRepository accessIpRepository;
 
     private static AtomicInteger count = new AtomicInteger(0);
 
+    @Transactional
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if (alreadySetup) {
             return;
         }
         setupSecurityResources();
+        setupAccessIpData();
         alreadySetup = true;
     }
-    @Transactional
+
     public void setupSecurityResources() {
         Set<Role> roles = new HashSet<>();
         Role adminRole = createRoleIfNotFound("ROLE_ADMIN", "관리자");
@@ -65,9 +62,10 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
                     .email(email)
                     .password(passwordEncoder.encode(password))
                     .build();
+            account = accountRepository.save(account);
         }
         account.setAccountRoles(roleSet);
-        accountRepository.save(account);
+
     }
     public void createResourceIfNotFound(String resourceName, String httpMethod, Set<Role> roleSet, String resourceType) {
         Resource resource = resourceRepository.findByResourceNameAndHttpMethod(resourceName, httpMethod);
@@ -79,9 +77,10 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
                     .resourceType(resourceType)
                     .orderNum(Long.valueOf(count.incrementAndGet()))
                     .build();
+            resource = resourceRepository.save(resource);
         }
         resource.setRoleSet(roleSet);
-        resourceRepository.save(resource);
+
     }
 
     public Role createRoleIfNotFound(String roleName, String roleDesc) {
@@ -91,18 +90,18 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
                     .roleName(roleName)
                     .roleDesc(roleDesc)
                     .build();
+            role = roleRepository.save(role);
         }
         return roleRepository.save(role);
     }
 
-    @Transactional
     public void createRoleHierarchyIfNotFound(Role childRole, Role parentRole) {
         RoleHierarchy parent = roleHierarchyRepository.findByName(parentRole.getRoleName());
         if (parent == null) {
             parent = RoleHierarchy.builder()
                     .name(parentRole.getRoleName())
                     .build();
-            roleHierarchyRepository.save(parent);
+            parent = roleHierarchyRepository.save(parent);
         }
 
         RoleHierarchy child = roleHierarchyRepository.findByName(childRole.getRoleName());
@@ -110,9 +109,20 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             child = RoleHierarchy.builder()
                     .name(childRole.getRoleName())
                     .build();
+            roleHierarchyRepository.save(child);
         }
 
         child.setParentName(parent);
-        roleHierarchyRepository.save(child);
     }
+
+    public void setupAccessIpData() {
+        AccessIp byIpAddress = accessIpRepository.findByIpAddress("0:0:0:0:0:0:0:1");
+        if (byIpAddress == null) {
+            AccessIp accessIp = AccessIp.builder()
+                    .ipAddress("0:0:0:0:0:0:0:1")
+                    .build();
+            accessIpRepository.save(accessIp);
+        }
+    }
+
 }
