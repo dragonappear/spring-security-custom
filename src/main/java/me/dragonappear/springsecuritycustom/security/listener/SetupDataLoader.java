@@ -48,6 +48,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         createResourceIfNotFound("/mypage", "",  Set.of(userRole), "url");
         createResourceIfNotFound("/messages", "",  Set.of(managerRole), "url");
         createResourceIfNotFound("/config", "",  roles, "url");
+        createResourceIfNotFound("me.dragonappear.springsecuritycustom.aopcontroller.AopMethodService.methodSecured", "",  roles, "method");
         createAccountIfNotFound("user", "user@admin.com", "pass", Set.of(userRole));
         createAccountIfNotFound("manager", "manager@admin.com", "pass", Set.of(managerRole));
         createRoleHierarchyIfNotFound(managerRole, adminRole);

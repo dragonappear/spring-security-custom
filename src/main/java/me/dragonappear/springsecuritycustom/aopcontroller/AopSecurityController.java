@@ -26,7 +26,6 @@ public class AopSecurityController {
 
     }
 
-    @Secured("ROLE_ADMIN")
     @GetMapping("/methodSecured")
     public String methodSecured(Model model){
 

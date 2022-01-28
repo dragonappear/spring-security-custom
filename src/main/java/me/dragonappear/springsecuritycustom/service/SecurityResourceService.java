@@ -25,7 +25,7 @@ public class SecurityResourceService {
 
     public LinkedHashMap<RequestMatcher, List<ConfigAttribute>> getResourceList() {
         LinkedHashMap<RequestMatcher, List<ConfigAttribute>> result = new LinkedHashMap<>();
-        List<Resource> resourceList = resourceRepository.findAll();
+        List<Resource> resourceList = resourceRepository.findAllResource();
         resourceList.forEach(resource -> {
             List<ConfigAttribute> configAttributeList =  new ArrayList<>();
             resource.getRoleSet().forEach(role -> {
@@ -34,6 +34,24 @@ public class SecurityResourceService {
             result.put(new AntPathRequestMatcher(resource.getResourceName()), configAttributeList);
         });
         return result;
+    }
+
+    public LinkedHashMap<String, List<ConfigAttribute>> getMethodResourceList() {
+        LinkedHashMap<String, List<ConfigAttribute>> result = new LinkedHashMap<>();
+        List<Resource> resourceList = resourceRepository.findAllMethodResource();
+        resourceList.forEach(resource -> {
+            List<ConfigAttribute> configAttributeList =  new ArrayList<>();
+            resource.getRoleSet().forEach(role -> {
+                configAttributeList.add(new SecurityConfig(role.getRoleName()));
+            });
+            result.put(resource.getResourceName(), configAttributeList);
+        });
+        return result;
+    }
+
+
+    public LinkedHashMap<String, List<ConfigAttribute>> getPointcutResourceList() {
+        return null;
     }
 
     public List<String> getAccessIpList() {
