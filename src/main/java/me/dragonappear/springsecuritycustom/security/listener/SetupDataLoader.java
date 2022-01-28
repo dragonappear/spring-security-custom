@@ -1,14 +1,14 @@
-package me.dragonappear.springsecuritycustom.security.web.listener;
+package me.dragonappear.springsecuritycustom.security.listener;
 
 import lombok.RequiredArgsConstructor;
 import me.dragonappear.springsecuritycustom.domain.entity.Account;
 import me.dragonappear.springsecuritycustom.domain.entity.Resource;
 import me.dragonappear.springsecuritycustom.domain.entity.Role;
+import me.dragonappear.springsecuritycustom.domain.entity.RoleHierarchy;
 import me.dragonappear.springsecuritycustom.repository.AccountRepository;
 import me.dragonappear.springsecuritycustom.repository.ResourceRepository;
+import me.dragonappear.springsecuritycustom.repository.RoleHierarchyRepository;
 import me.dragonappear.springsecuritycustom.repository.RoleRepository;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,6 +27,8 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
     private final ResourceRepository resourceRepository;
+    private final RoleHierarchyRepository roleHierarchyRepository;
+
     private static AtomicInteger count = new AtomicInteger(0);
 
     @Override
@@ -51,6 +53,8 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         createResourceIfNotFound("/config", "",  roles, "url");
         createAccountIfNotFound("user", "user@admin.com", "pass", Set.of(userRole));
         createAccountIfNotFound("manager", "manager@admin.com", "pass", Set.of(managerRole));
+        createRoleHierarchyIfNotFound(managerRole, adminRole);
+        createRoleHierarchyIfNotFound(userRole, managerRole);
     }
 
     public void createAccountIfNotFound(final String userName, final String email, final String password, Set<Role> roleSet) {
@@ -89,5 +93,26 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
                     .build();
         }
         return roleRepository.save(role);
+    }
+
+    @Transactional
+    public void createRoleHierarchyIfNotFound(Role childRole, Role parentRole) {
+        RoleHierarchy parent = roleHierarchyRepository.findByName(parentRole.getRoleName());
+        if (parent == null) {
+            parent = RoleHierarchy.builder()
+                    .name(parentRole.getRoleName())
+                    .build();
+            roleHierarchyRepository.save(parent);
+        }
+
+        RoleHierarchy child = roleHierarchyRepository.findByName(childRole.getRoleName());
+        if (child == null) {
+            child = RoleHierarchy.builder()
+                    .name(childRole.getRoleName())
+                    .build();
+        }
+
+        child.setParentName(parent);
+        roleHierarchyRepository.save(child);
     }
 }

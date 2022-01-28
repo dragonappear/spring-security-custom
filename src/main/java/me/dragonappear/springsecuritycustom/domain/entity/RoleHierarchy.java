@@ -3,27 +3,33 @@ package me.dragonappear.springsecuritycustom.domain.entity;
 import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-@ToString(exclude = {"accounts","resources"})
-@EqualsAndHashCode(of = "id")
-@NoArgsConstructor(access = AccessLevel.PROTECTED) @AllArgsConstructor @Builder
+@ToString(exclude = {"parentName","roleHierarchy"})
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Entity
-public class RoleHierarchy {
+public class RoleHierarchy implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "role_hierarchy_id")
     private Long id;
 
-    @Column(name = "child_name")
-    private String childName;
+    @Column(name = "role_hierarchy_name")
+    private String name;
 
-    @ManyToOne(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_name", referencedColumnName = "child_name")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_name", referencedColumnName = "role_hierarchy_name")
     private RoleHierarchy parentName;
 
-    @OneToMany(mappedBy = "parentName", cascade = {CascadeType.ALL})
-    private Set<RoleHierarchy> roleHierarchy = new HashSet<>();
+    @OneToMany(mappedBy = "parentName")
+    private Set<RoleHierarchy> childRoleHierarchy = new HashSet<>();
+
+    public void setParentName(RoleHierarchy parentRoleHierarchy) {
+        this.parentName = parentRoleHierarchy;
+    }
 }
