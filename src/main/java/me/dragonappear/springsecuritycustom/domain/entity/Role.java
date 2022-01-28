@@ -24,11 +24,11 @@ public class Role implements Serializable {
     @Column
     private String roleDesc;
 
-    @ManyToMany(fetch = FetchType.LAZY,mappedBy = "roleSet")
+    @ManyToMany(mappedBy = "roleSet")
     @OrderBy("ordernum desc")
     private Set<Resource> resources = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY,mappedBy = "accountRoles")
+    @ManyToMany(mappedBy = "accountRoles")
     private Set<Account> accounts = new HashSet<>();
 
 }

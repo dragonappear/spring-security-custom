@@ -2,6 +2,7 @@ package me.dragonappear.springsecuritycustom.security.web.config;
 
 import lombok.RequiredArgsConstructor;
 import me.dragonappear.springsecuritycustom.security.web.factory.UrlResourcesMapFactoryBean;
+import me.dragonappear.springsecuritycustom.security.web.filter.PermitAllFilter;
 import me.dragonappear.springsecuritycustom.security.web.handler.FormAccessDeniedHandler;
 import me.dragonappear.springsecuritycustom.security.web.metadatasource.UrlFilterInvocationSecurityMetadataSource;
 import me.dragonappear.springsecuritycustom.security.web.oauth2.OAuth2AccountService;
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.vote.AffirmativeBased;
@@ -31,10 +33,12 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
 @Configuration
+@Order(2)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final AuthenticationDetailsSource formAuthenticationDetailsSource;
     private final AuthenticationSuccessHandler formAuthenticationSuccessHandler;
@@ -43,6 +47,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final OAuth2AccountService oAuth2AccountService;
     private final SecurityResourceService securityResourceService;
+
+    private static List<String> permitAllResources = Arrays.asList("/", "/login**","/home");
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -59,10 +65,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/", "/login**").permitAll()
-                /*.antMatchers("/mypage").hasRole("USER")
-                .antMatchers("/messages").hasRole("MANAGER")
-                .antMatchers("/config").hasRole("ADMIN")*/
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling()
@@ -85,19 +87,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .userService(oAuth2AccountService);
 
         http
-                .addFilterAt(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class);
+                .addFilterAt(urlPermitAllFilter(), FilterSecurityInterceptor.class);
     }
-
     @Bean
-    public FilterRegistrationBean filterRegistrationBean() throws Exception {
-        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
-        filterRegistrationBean.setFilter(customFilterSecurityInterceptor());
-        filterRegistrationBean.setEnabled(false);
-        return filterRegistrationBean;
-    }
-
-    @Bean
-    public FilterSecurityInterceptor customFilterSecurityInterceptor() throws Exception {        FilterSecurityInterceptor interceptor = new FilterSecurityInterceptor();
+    public FilterSecurityInterceptor urlPermitAllFilter() throws Exception {
+        FilterSecurityInterceptor interceptor = new PermitAllFilter(permitAllResources);
         interceptor.setAuthenticationManager(authenticationManagerBean());
         interceptor.setAccessDecisionManager(affirmativeBased());
         interceptor.setSecurityMetadataSource(urlFilterInvocationSecurityMetadataSource());
