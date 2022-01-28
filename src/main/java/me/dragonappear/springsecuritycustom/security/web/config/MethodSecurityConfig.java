@@ -2,10 +2,12 @@ package me.dragonappear.springsecuritycustom.security.web.config;
 
 import lombok.RequiredArgsConstructor;
 import me.dragonappear.springsecuritycustom.security.web.factory.MethodResourceMapFactoryBean;
+import me.dragonappear.springsecuritycustom.security.web.interceptor.CustomMethodSecurityInterceptor;
 import me.dragonappear.springsecuritycustom.security.web.processor.ProtectPointcutPostProcessor;
 import me.dragonappear.springsecuritycustom.service.SecurityResourceService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.intercept.RunAsManager;
 import org.springframework.security.access.method.MapBasedMethodSecurityMetadataSource;
 import org.springframework.security.access.method.MethodSecurityMetadataSource;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -16,6 +18,20 @@ import org.springframework.security.config.annotation.method.configuration.Globa
 @Configuration
 public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
     private final SecurityResourceService securityResourceService;
+
+    @Bean
+    public CustomMethodSecurityInterceptor customMethodSecurityInterceptor(MapBasedMethodSecurityMetadataSource methodSecurityMetadataSource) {
+        CustomMethodSecurityInterceptor customMethodSecurityInterceptor =  new CustomMethodSecurityInterceptor();
+        customMethodSecurityInterceptor.setAccessDecisionManager(accessDecisionManager());
+        customMethodSecurityInterceptor.setAfterInvocationManager(afterInvocationManager());
+        customMethodSecurityInterceptor.setSecurityMetadataSource(methodSecurityMetadataSource);
+        RunAsManager runAsManager = runAsManager();
+        if (runAsManager != null) {
+            customMethodSecurityInterceptor.setRunAsManager(runAsManager);
+        }
+
+        return customMethodSecurityInterceptor;
+    }
 
     @Override
     protected MethodSecurityMetadataSource customMethodSecurityMetadataSource() {
