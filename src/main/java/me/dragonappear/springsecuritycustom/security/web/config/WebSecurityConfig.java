@@ -118,8 +118,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new RoleVoter();
     }
 
+    @Bean
     public FilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource() throws Exception {
-        return new UrlFilterInvocationSecurityMetadataSource(urlResourcesMapFactoryBean().getObject());
+        return new UrlFilterInvocationSecurityMetadataSource(urlResourcesMapFactoryBean().getObject(),securityResourceService);
     }
 
     public UrlResourcesMapFactoryBean urlResourcesMapFactoryBean() {

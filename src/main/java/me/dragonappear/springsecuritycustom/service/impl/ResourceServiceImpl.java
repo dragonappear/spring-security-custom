@@ -18,24 +18,24 @@ public class ResourceServiceImpl implements ResourceService {
     private final ResourceRepository resourceRepository;
 
     @Override
-    public Resource getResources(Long id) {
+    public Resource getResource(Long id) {
         return resourceRepository.findById(id).orElse(null);
     }
 
     @Override
-    public List<Resource> getResources() {
+    public List<Resource> getResource() {
         return resourceRepository.findAll(Sort.by(Sort.Order.asc("orderNum")));
     }
 
     @Transactional
     @Override
-    public void createResources(Resource resource) {
+    public void createResource(Resource resource) {
         resourceRepository.save(resource);
     }
 
     @Transactional
     @Override
-    public void deleteResources(Long id) {
+    public void deleteResource(Long id) {
         resourceRepository.deleteById(id);
     }
 }

@@ -1,5 +1,6 @@
 package me.dragonappear.springsecuritycustom.security.web.metadatasource;
 
+import me.dragonappear.springsecuritycustom.service.SecurityResourceService;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
@@ -12,8 +13,10 @@ import java.util.*;
 public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocationSecurityMetadataSource {
 
     private LinkedHashMap<RequestMatcher, List<ConfigAttribute>> requestMap ;
+    private SecurityResourceService securityResourceService;
 
-    public UrlFilterInvocationSecurityMetadataSource(LinkedHashMap<RequestMatcher, List<ConfigAttribute>> requestMap) {
+    public UrlFilterInvocationSecurityMetadataSource(LinkedHashMap<RequestMatcher, List<ConfigAttribute>> requestMap,SecurityResourceService securityResourceService) {
+        this.securityResourceService = securityResourceService;
         this.requestMap = requestMap;
     }
 
@@ -44,5 +47,14 @@ public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocati
     @Override
     public boolean supports(Class<?> clazz) {
         return FilterInvocation.class.isAssignableFrom(clazz);
+    }
+
+    public void reload() {
+        LinkedHashMap<RequestMatcher, List<ConfigAttribute>> reloadedMap = securityResourceService.getResourceList();
+        requestMap.clear();
+
+        for (Map.Entry<RequestMatcher, List<ConfigAttribute>> entry : reloadedMap.entrySet()) {
+            requestMap.put(entry.getKey(),entry.getValue());
+        }
     }
 }

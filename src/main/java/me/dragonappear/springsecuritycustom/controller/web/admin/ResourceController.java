@@ -6,6 +6,7 @@ import me.dragonappear.springsecuritycustom.domain.dto.ResourceDto;
 import me.dragonappear.springsecuritycustom.domain.entity.Resource;
 import me.dragonappear.springsecuritycustom.domain.entity.Role;
 import me.dragonappear.springsecuritycustom.repository.RoleRepository;
+import me.dragonappear.springsecuritycustom.security.web.metadatasource.UrlFilterInvocationSecurityMetadataSource;
 import me.dragonappear.springsecuritycustom.service.ResourceService;
 import me.dragonappear.springsecuritycustom.service.RoleService;
 import org.modelmapper.ModelMapper;
@@ -27,11 +28,12 @@ public class ResourceController {
     private final ResourceService resourceService;
     private final RoleRepository roleRepository;
     private final RoleService roleService;
+    private final UrlFilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource;
 
 
     @GetMapping(value = "/admin/resources")
     public String getResources(Model model) {
-        List<Resource> resources = resourceService.getResources();
+        List<Resource> resources = resourceService.getResource();
         model.addAttribute("resources", resources);
         return "admin/resource/list";
     }
@@ -43,7 +45,11 @@ public class ResourceController {
         roles.add(role);
         Resource resource = resourceDto.toEntity();
         resource.setRoleSet(roles);
-        resourceService.createResources(resource);
+        resourceService.createResource(resource);
+
+        if("url".equals(resourceDto.getResourceType())){
+            urlFilterInvocationSecurityMetadataSource.reload();
+        }
         return "redirect:/admin/resources";
     }
 
@@ -67,7 +73,7 @@ public class ResourceController {
         List<Role> roles = roleService.getRoles();
         model.addAttribute("roleList", roles);
 
-        Resource resources = resourceService.getResources(Long.valueOf(id));
+        Resource resources = resourceService.getResource(Long.valueOf(id));
         ModelMapper modelMapper = new ModelMapper();
 
         ResourceDto resourcesDto = modelMapper.map(resources, ResourceDto.class);
@@ -79,8 +85,12 @@ public class ResourceController {
     @GetMapping(value="/admin/resources/delete/{id}")
     public String removeResources(@PathVariable String id, Model model) throws Exception {
 
-        Resource resources = resourceService.getResources(Long.valueOf(id));
-        resourceService.deleteResources(Long.valueOf(id));
+        Resource resource = resourceService.getResource(Long.valueOf(id));
+        resourceService.deleteResource(Long.valueOf(id));
+
+        if("url".equals(resource.getResourceType())){
+            urlFilterInvocationSecurityMetadataSource.reload();
+        }
 
         return "redirect:/admin/resources";
     }
