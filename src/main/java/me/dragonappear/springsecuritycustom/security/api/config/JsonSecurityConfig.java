@@ -18,7 +18,6 @@ import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,7 +29,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -46,6 +44,7 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
     private final TokenProvider tokenProvider;
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(jsonAuthenticationProvider());
@@ -59,47 +58,29 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-            http.formLogin().disable();
-            http.oauth2Client().disable();
-            http.csrf().disable();
-            http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-            http.rememberMe().disable();
-            http.httpBasic().disable();
-
-        http.
-                addFilter(customCorsFilter()).
-                addFilterBefore(oAuthJsonAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class).
-                addFilterAfter(jwtValidationFilter(), UsernamePasswordAuthenticationFilter.class);
-
-            http
-                .exceptionHandling()
-                .accessDeniedHandler(jsonAccessDeniedHandler())
-                .authenticationEntryPoint(jsonAuthenticationEntryPoint());
-
-            http
+        http
                 .antMatcher("/api/**")
                 .authorizeRequests()
-                .antMatchers("/api/login").permitAll()
-                .antMatchers("/api/messages").hasRole("MANAGER")
-                .anyRequest().authenticated();
+                .anyRequest().authenticated()
 
-            customConfigurerJson(http);
+                .and()
+                .addFilter(customCorsFilter())
+                .addFilterBefore(oAuthJsonAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jsonAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtValidationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling()
+                .accessDeniedHandler(jsonAccessDeniedHandler())
+                .authenticationEntryPoint(jsonAuthenticationEntryPoint())
+
+                .and()
+                .formLogin().disable().oauth2Client().disable()
+                .csrf().disable().rememberMe().disable()
+                .httpBasic().disable()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
     }
 
-    public void customConfigurerJson(HttpSecurity http) throws Exception {
-        http
-                .apply(new JsonLoginConfigurer<>())
-                .successHandlerJson(jsonAuthenticationSuccessHandler())
-                .failureHandlerJson(jsonAuthenticationFailureHandler())
-                .setAuthenticationManager(authenticationManagerBean())
-                .loginProcessingUrl("/api/login");
-    }
-
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
 
     @Bean
     public JsonAuthenticationFilter jsonAuthenticationFilter() throws Exception {
@@ -108,6 +89,15 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
         jsonAuthenticationFilter.setAuthenticationSuccessHandler(jsonAuthenticationSuccessHandler());
         jsonAuthenticationFilter.setAuthenticationFailureHandler(jsonAuthenticationFailureHandler());
         return jsonAuthenticationFilter;
+    }
+
+    @Bean
+    public OAuthJsonAuthenticationFilter oAuthJsonAuthenticationFilter() throws Exception {
+        OAuthJsonAuthenticationFilter oAuthJsonAuthenticationFilter = new OAuthJsonAuthenticationFilter();
+        oAuthJsonAuthenticationFilter.setAuthenticationManager(authenticationManagerBean());
+        oAuthJsonAuthenticationFilter.setAuthenticationSuccessHandler(jsonAuthenticationSuccessHandler());
+        oAuthJsonAuthenticationFilter.setAuthenticationFailureHandler(jsonAuthenticationFailureHandler());
+        return oAuthJsonAuthenticationFilter;
     }
 
     @Bean
@@ -121,7 +111,7 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public AuthenticationFailureHandler jsonAuthenticationFailureHandler() {
+    public JsonAuthenticationFailureHandler jsonAuthenticationFailureHandler() {
         return new JsonAuthenticationFailureHandler();
     }
 
@@ -141,22 +131,14 @@ public class JsonSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public OAuthJsonAuthenticationFilter oAuthJsonAuthenticationFilter() throws Exception {
-        OAuthJsonAuthenticationFilter oAuthJsonAuthenticationFilter = new OAuthJsonAuthenticationFilter();
-        oAuthJsonAuthenticationFilter.setAuthenticationManager(authenticationManagerBean());
-        oAuthJsonAuthenticationFilter.setAuthenticationSuccessHandler(jsonAuthenticationSuccessHandler());
-        oAuthJsonAuthenticationFilter.setAuthenticationFailureHandler(jsonAuthenticationFailureHandler());
-        return oAuthJsonAuthenticationFilter;
-    }
-
-    @Bean
     public OAuthJsonAuthenticationProvider oAuthJsonAuthenticationProvider() {
         return new OAuthJsonAuthenticationProvider(jsonUserDetailsService);
     }
 
     @Bean
-    public JwtValidationFilter jwtValidationFilter() {
-        return new JwtValidationFilter(tokenProvider,jsonUserDetailsService
-                , (JsonAuthenticationFailureHandler) jsonAuthenticationFailureHandler());
+    public JwtValidationFilter jwtValidationFilter() throws Exception {
+        return new JwtValidationFilter(
+                tokenProvider, jsonUserDetailsService, jsonAuthenticationFailureHandler());
     }
 }
+

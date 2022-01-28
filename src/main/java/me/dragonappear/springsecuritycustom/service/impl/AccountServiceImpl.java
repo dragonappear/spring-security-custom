@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,8 +40,8 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     @Override
     public void modifyUser(AccountDto accountDto) {
-        Account account = accountDto.toEntity();
-        if (account.getAccountRoles() != null) {
+        Account account = accountRepository.findByEmail(accountDto.getEmail());
+        if (accountDto.getAccountRoles() != null) {
             Set<Role> roles = new HashSet<>();
             accountDto.getAccountRoles().forEach(
                     role -> {
@@ -50,7 +51,7 @@ public class AccountServiceImpl implements AccountService {
             account.setAccountRoles(roles);
         }
         account.setPassword(passwordEncoder.encode(accountDto.getPassword()));
-        accountRepository.save(account);
+        /*accountRepository.save(account);*/
     }
 
     @Override

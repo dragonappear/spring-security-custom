@@ -3,8 +3,6 @@ package me.dragonappear.springsecuritycustom.security.api.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.dragonappear.springsecuritycustom.domain.dto.AccountDto;
 import me.dragonappear.springsecuritycustom.security.api.token.OAuthJsonAuthenticationToken;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;

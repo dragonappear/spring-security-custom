@@ -28,7 +28,6 @@ public class Resource implements Serializable {
     @Column
     private String resourceType;
 
-    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "role_resources",
             joinColumns = {@JoinColumn(name = "resource_id")}, inverseJoinColumns = {@JoinColumn(name = "role_id")})

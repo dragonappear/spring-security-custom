@@ -11,8 +11,7 @@ import java.util.Set;
 
 @ToString(exclude = {"accountRoles"})
 @EqualsAndHashCode(of = "id")
-@Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED) @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED) @AllArgsConstructor @Builder
 @Getter
 @Entity
 public class Account implements Serializable {
@@ -33,9 +32,10 @@ public class Account implements Serializable {
 
 
     @JsonIgnore
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "account_roles",
-            joinColumns = {@JoinColumn(name = "account_id")}, inverseJoinColumns = {@JoinColumn(name = "role_id")})
+            joinColumns = { @JoinColumn(name = "account_id") },
+            inverseJoinColumns = {@JoinColumn(name = "role_id") })
     private Set<Role> accountRoles = new HashSet<>();
 
     public void setAccountRoles(Set<Role> accountRoles) {

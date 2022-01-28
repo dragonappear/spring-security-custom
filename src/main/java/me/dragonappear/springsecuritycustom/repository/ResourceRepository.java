@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface ResourceRepository extends JpaRepository<Resource,Long> {
-
+    Resource findByResourceNameAndHttpMethod(String resourceName, String httpMethod);
     @Query("select r from Resource r join fetch r.roleSet where r.resourceType = 'url' order by r.orderNum desc")
     List<Resource> findAllResource();
 
@@ -16,4 +16,5 @@ public interface ResourceRepository extends JpaRepository<Resource,Long> {
 
     @Query("select r from Resource r join fetch r.roleSet where r.resourceType = 'pointcut' order by r.orderNum desc")
     List<Resource> findAllPointcutResource();
+
 }

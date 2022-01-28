@@ -35,18 +35,12 @@
         </div>
       </div>
       <div class="form-group">
-        <label for="age" class="col-sm-2 control-label">나이</label>
-        <div class="col-sm-10">
-          <input type="text" class="form-control input-large" name="age" id="age" placeholder="나이" th:value="*{age}" required>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="roles" class="col-sm-2 control-label">권한</label>
+        <label for="accountRoles" class="col-sm-2 control-label">권한</label>
         <div class="col-sm-10" th:each="role: ${roleList}">
-          <input th:type="checkbox" name="roles" id="roles"
+          <input th:type="checkbox" name="accountRoles" id="accountRoles"
                  th:text="${role.roleName}"
                  th:value="${role.roleName}"
-                 th:checked="${account.roles.contains(role.roleName)} ? 'true' : 'false'" />
+                 th:checked="${account.accountRoles.contains(role.roleName)} ? 'true' : 'false'" />
         </div>
       </div>
       <div class="form-group">

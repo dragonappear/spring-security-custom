@@ -1,16 +1,20 @@
 package me.dragonappear.springsecuritycustom.security.web.config;
 
 import lombok.RequiredArgsConstructor;
-import me.dragonappear.springsecuritycustom.security.factory.UrlResourceMapFactoryBean;
+import me.dragonappear.springsecuritycustom.security.web.factory.UrlResourcesMapFactoryBean;
 import me.dragonappear.springsecuritycustom.security.web.handler.FormAccessDeniedHandler;
 import me.dragonappear.springsecuritycustom.security.web.metadatasource.UrlFilterInvocationSecurityMetadataSource;
 import me.dragonappear.springsecuritycustom.security.web.oauth2.OAuth2AccountService;
 import me.dragonappear.springsecuritycustom.security.web.provider.FormAuthenticationProvider;
-import me.dragonappear.springsecuritycustom.security.web.service.SecurityResourceService;
+import me.dragonappear.springsecuritycustom.service.SecurityResourceService;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.AccessDecisionVoter;
+import org.springframework.security.access.vote.AffirmativeBased;
+import org.springframework.security.access.vote.RoleVoter;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -21,12 +25,16 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RequiredArgsConstructor
 @Configuration
-@Order(1)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final AuthenticationDetailsSource formAuthenticationDetailsSource;
     private final AuthenticationSuccessHandler formAuthenticationSuccessHandler;
@@ -35,6 +43,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final OAuth2AccountService oAuth2AccountService;
     private final SecurityResourceService securityResourceService;
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(formAuthenticationProvider());
@@ -50,16 +59,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/", "/login**","/users").permitAll()
-                .antMatchers("/mypage").hasRole("USER")
+                .antMatchers("/", "/login**").permitAll()
+                /*.antMatchers("/mypage").hasRole("USER")
                 .antMatchers("/messages").hasRole("MANAGER")
+                .antMatchers("/config").hasRole("ADMIN")*/
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling()
                 .accessDeniedPage("/denied")
-                .accessDeniedHandler(formAccessDeniedHandler())
+                .accessDeniedHandler(formAccessDeniedHandler());
 
-                .and()
+        http
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login_proc")
@@ -73,6 +83,49 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .loginPage("/login")
                 .userInfoEndpoint()
                 .userService(oAuth2AccountService);
+
+        http
+                .addFilterAt(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class);
+    }
+
+    @Bean
+    public FilterRegistrationBean filterRegistrationBean() throws Exception {
+        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
+        filterRegistrationBean.setFilter(customFilterSecurityInterceptor());
+        filterRegistrationBean.setEnabled(false);
+        return filterRegistrationBean;
+    }
+
+    @Bean
+    public FilterSecurityInterceptor customFilterSecurityInterceptor() throws Exception {        FilterSecurityInterceptor interceptor = new FilterSecurityInterceptor();
+        interceptor.setAuthenticationManager(authenticationManagerBean());
+        interceptor.setAccessDecisionManager(affirmativeBased());
+        interceptor.setSecurityMetadataSource(urlFilterInvocationSecurityMetadataSource());
+        return interceptor;
+    }
+
+    public AccessDecisionManager affirmativeBased() {
+        return new AffirmativeBased(getAccessDecisionVoters());
+    }
+
+    public List<AccessDecisionVoter<?>> getAccessDecisionVoters() {
+        List<AccessDecisionVoter<? extends Object>> accessDecisionVoters = new ArrayList<>();
+        accessDecisionVoters.add(roleVoter());
+        return accessDecisionVoters;
+    }
+    @Bean
+    public AccessDecisionVoter<? extends Object> roleVoter() {
+        return new RoleVoter();
+    }
+
+    public FilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource() throws Exception {
+        return new UrlFilterInvocationSecurityMetadataSource(urlResourcesMapFactoryBean().getObject());
+    }
+
+    public UrlResourcesMapFactoryBean urlResourcesMapFactoryBean() {
+        UrlResourcesMapFactoryBean bean = new UrlResourcesMapFactoryBean();
+        bean.setSecurityResourceService(securityResourceService);
+        return bean;
     }
 
     @Bean
@@ -83,16 +136,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public AccessDeniedHandler formAccessDeniedHandler() {
         return new FormAccessDeniedHandler("/denied");
-    }
-
-    @Bean
-    public UrlFilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource() throws Exception {
-        return new UrlFilterInvocationSecurityMetadataSource(urlResourceMapFactoryBean().getObject(),securityResourceService);
-    }
-
-    @Bean
-    public UrlResourceMapFactoryBean urlResourceMapFactoryBean() {
-        return new UrlResourceMapFactoryBean(securityResourceService);
     }
 
     @Override
