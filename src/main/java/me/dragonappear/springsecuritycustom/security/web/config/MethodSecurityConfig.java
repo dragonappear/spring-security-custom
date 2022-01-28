@@ -2,6 +2,7 @@ package me.dragonappear.springsecuritycustom.security.web.config;
 
 import lombok.RequiredArgsConstructor;
 import me.dragonappear.springsecuritycustom.security.web.factory.MethodResourceMapFactoryBean;
+import me.dragonappear.springsecuritycustom.security.web.processor.ProtectPointcutPostProcessor;
 import me.dragonappear.springsecuritycustom.service.SecurityResourceService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,5 +31,18 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
     public  MethodResourceMapFactoryBean methodResourcesMapFactoryBean() {
         return new MethodResourceMapFactoryBean(securityResourceService,"method");
     }
+
+    @Bean
+    public ProtectPointcutPostProcessor protectPointcutPostProcessor(){
+        ProtectPointcutPostProcessor protectPointcutPostProcessor = new ProtectPointcutPostProcessor(mapBasedMethodSecurityMetadataSource());
+        protectPointcutPostProcessor.setPointcutMap(pointcutResourceMapFactoryBean().getObject());
+        return protectPointcutPostProcessor;
+    }
+
+    @Bean
+    public  MethodResourceMapFactoryBean pointcutResourceMapFactoryBean() {
+        return new MethodResourceMapFactoryBean(securityResourceService,"pointcut");
+    }
+
 
 }
